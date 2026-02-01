@@ -1,4 +1,4 @@
-name: Build Kernel (KSUN + SusFS)
+name: Build Kernel (KSU + SusFS)
 
 on:
   push:
@@ -22,37 +22,33 @@ jobs:
         gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler \
         libncurses5-dev ccache
 
-    - name: Download Clang Toolchain (AOSP)
+    - name: Download Clang Toolchain (ZyC-Clang)
       run: |
-        mkdir clang
-        cd clang
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r487747c.tar.gz
-        tar -xzf clang-r487747c.tar.gz
-        export PATH=$PWD/bin:$PATH
+        git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang.git clang
+        export PATH=$PWD/clang/bin:$PATH
 
     - name: Set Kernel Name & Build
       run: |
-        # Toolchain yolunu ekle
         export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         export CC=clang
+
+        cd kernel-5.10
         
-        # --- İMZA KISMI BURASI REİS ---
-        # Kernel sürümünün sonuna ismini ekler
         echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_defconfig
         echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_00_defconfig
         
-        # Scripti çalıştırılabilir yap ve başlat
-        chmod +x build_kernel.sh
-        bash build_kernel.sh
+        # Derlemeyi Başlat
+        make a24_defconfig
+        make -j$(nproc) Image.gz-dtb dtbo.img
 
     - name: Upload Kernel Image
       uses: actions/upload-artifact@v4
       with:
         name: Image-KSU-SusFS
         path: |
-          out/arch/arm64/boot/Image
-          out/arch/arm64/boot/dtbo.img
-          out/arch/arm64/boot/*.dtb
+          kernel-5.10/arch/arm64/boot/Image.gz-dtb
+          kernel-5.10/arch/arm64/boot/dtbo.img
+          kernel-5.10/arch/arm64/boot/*.dtb
