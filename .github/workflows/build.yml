@@ -1,0 +1,58 @@
+name: Build Kernel (KSUN + SusFS)
+
+on:
+  push:
+    branches: [ "ksu-susfs" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git bc bison flex libssl-dev make zip \
+        gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler \
+        libncurses5-dev ccache
+
+    - name: Download Clang Toolchain (AOSP)
+      run: |
+        mkdir clang
+        cd clang
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r487747c.tar.gz
+        tar -xzf clang-r487747c.tar.gz
+        export PATH=$PWD/bin:$PATH
+
+    - name: Set Kernel Name & Build
+      run: |
+        # Toolchain yolunu ekle
+        export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+        export CC=clang
+        
+        # --- İMZA KISMI BURASI REİS ---
+        # Kernel sürümünün sonuna ismini ekler
+        echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_defconfig
+        echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_00_defconfig
+        
+        # Scripti çalıştırılabilir yap ve başlat
+        chmod +x build_kernel.sh
+        bash build_kernel.sh
+
+    - name: Upload Kernel Image
+      uses: actions/upload-artifact@v4
+      with:
+        name: Image-KSU-SusFS
+        path: |
+          out/arch/arm64/boot/Image
+          out/arch/arm64/boot/dtbo.img
+          out/arch/arm64/boot/*.dtb
