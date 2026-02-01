@@ -1,4 +1,4 @@
-name: Build Kernel (KSUN + SusFS)
+name: Build Kernel (KSU + SusFS)
 
 on:
   push:
@@ -43,10 +43,9 @@ jobs:
 
         echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_defconfig
         echo 'CONFIG_LOCALVERSION="-OLI88-KSUN"' >> arch/arm64/configs/a24_00_defconfig
-        
-        # Derlemeyi Başlat
+
         make a24_defconfig
-        make -j$(nproc) Image.gz-dtb dtbo.img
+        make -j$(nproc) Image.gz-dtb
 
     - name: Upload Kernel Image
       uses: actions/upload-artifact@v4
@@ -54,5 +53,4 @@ jobs:
         name: Image-KSU-SusFS
         path: |
           kernel-5.10/arch/arm64/boot/Image.gz-dtb
-          kernel-5.10/arch/arm64/boot/dtbo.img
           kernel-5.10/arch/arm64/boot/*.dtb
