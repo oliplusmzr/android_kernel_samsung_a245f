@@ -1,0 +1,7 @@
+calvinpan@google.com
+goldmanj@google.com
+
+# Backup owners
+nona@google.com
+siyamed@google.com
+include platform/system/core:/janitors/OWNERS #{LAST_RESORT_SUGGESTION}
